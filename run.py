@@ -38,8 +38,9 @@ def read_serial():
     print("decoded input: " + str(decoded_input[0] )+ str(decoded_input[1]))
     return decoded_input
 
-def write_serial(input):
-    ser.write(input)
+def write_serial(motor_speeds):
+	text = str(motor_speeds[0]) + "," + str(motor_speeds[1])
+	ser.write(text)
    
 def differential_steering(speed, direction):
 	left_motor = speed
@@ -58,8 +59,7 @@ def differential_steering(speed, direction):
 
 while 1:
 	speed, direction = read_serial()
-	differential_steering(speed, direction)
-	print(speed)
-	print(direction)
+	motor_speeds = differential_steering(speed, direction)
+	write_serial(motor_speeds)
 
 
