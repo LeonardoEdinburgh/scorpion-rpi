@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import serial
+import time
 
 direction_max = 100 
 direction_min = -100
@@ -11,21 +12,18 @@ previous_direction = 0
 
 print("Setting up serial...")
 ser = serial.Serial('/dev/ttyACM0',115200)
-ser2 = serial.Serial('/dev/ttyACM1',115200)
 print("Reading...")
 
 # Validate the serial in then return the speed and direction.
 # If invalid return the previous values.
 def decode_input(input, previous_speed, previous_direction):
-	#print("length:" + str(len(input)))
+	print("length:" + str(len(input)))
 	if len(input) == 2 : 
-		direction = float(input[0])
-		speed = float(input[1])
-		#print("decoded direction:" + direction)
-		#print("decoded speed:" + speed)
-		#print("max speed:" + speed_max)
+		direction = input[0]
+		speed = input[1]
+		print("decoded direction:" + direction)
+		print("decoded speed:" + speed)
 		if (speed < speed_max and direction < direction_max) :
-                        
 			if( speed > speed_min and direction > direction_min) :
 				previous_speed = speed
 				previous_direction = direction
@@ -38,7 +36,7 @@ def read_serial():
     input = str(ser.readline())     
     input = input.split('_')
     decoded_input = decode_input(input, previous_speed, previous_direction)
-    #print("decoded input: " + str(decoded_input[0] )+ str(decoded_input[1]))
+    print("decoded input: " + str(decoded_input[0] )+ str(decoded_input[1]))
     return decoded_input
 
 def write_serial(motor_speeds):
@@ -49,21 +47,35 @@ def differential_steering(speed, direction):
 	left_motor = speed
 	right_motor = speed
 	direction_percent =  abs(direction) / float(direction_max)
-	#print("dir perc " + str(direction_percent))
+	print("dir perc " + str(direction_percent))
 	# If turn left
 	if direction < 0 : 
 		left_motor -= direction_percent * abs(speed)
 	# If turn right
 	elif direction > 0 : 
 		right_motor -= direction_percent * abs(speed)
-	#print("left motor: " + str(left_motor))
-	#print("right motor:  " + str(right_motor))
+	print("left motor: " + str(left_motor))
+	print("right motor:  " + str(right_motor))
 	return left_motor, right_motor
 
 while 1:
-	speed, direction = read_serial()
-	print(str(speed)+" " +str(direction))
+        # Step 1
+	speed, direction = (100, 50)
+	time.sleep(1)
 	motor_speeds = differential_steering(speed, direction)
 	write_serial(motor_speeds)
+        print(motor_speeds)
 
+        # Step 2
+        speed, direction = (100, -50)
+	time.sleep(1)
+	motor_speeds = differential_steering(speed, direction)
+	write_serial(motor_speeds)
+        print(motor_speeds)
 
+        # Step 3
+        speed, direction = (-50, 0)
+	time.sleep(1)
+	motor_speeds = differential_steering(speed, direction)
+	write_serial(motor_speeds)
+        print(motor_speeds)
